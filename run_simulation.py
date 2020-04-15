@@ -34,11 +34,11 @@ country = 'up'
 #params['country'] = country
 
 load_population = True
-seed=0
+seed=(0)
 params['seed'] = float(seed)
 """int: Seed for random draws"""
 
-np.random.seed(seed)
+np.random.seed(seed=seed)
 
 if country == 'China':
     d0 = date(2019, 11, 15)
@@ -500,7 +500,7 @@ p_mild_severe[p_mild_severe > 1] = 1
 p_severe_critical[p_severe_critical > 1] = 1
 p_critical_death[p_critical_death > 1] = 1
 
-num_runs = 10
+num_runs = 2
 n = int(params['n'])
 age, households, diabetes, hypertension, age_groups = pickle.load(open('{}_population_{}.pickle'.format(country, n), 'rb'))
 T = int(params['T'])
