@@ -1,0 +1,68 @@
+country	disease	filter	"P(disease, filter)"	P(disease|filter)	remarks
+us	diabetes	18-45	0.015	0.042	total_pop=325million
+us	diabetes	45-65	0.045	0.175	
+us	diabetes	>65	0.044	0.268	
+us	diabetes	male	0.055	0.14	
+us	diabetes	female	0.05	0.12	
+us	hypertension	18-40		0.075	
+us	hypertension	40-59		0.332	
+us	hypertension	>60		0.631	
+us	hypertension	male18-40		0.092	
+us	hypertension	male40-59		0.372	
+us	hypertension	male>60		0.585	
+us	hypertension	female18-40		0.056	
+us	hypertension	female40-59		0.294	
+us	hypertension	female>60		0.668	
+us	hypertension				
+skorea	hypertension	30-39	to be computed	0.086	
+skorea	hypertension	40-49		0.194	
+skorea	hypertension	50-59		0.34	
+skorea	hypertension	60-69		0.497	
+skorea	hypertension	>70		0.645	
+skorea	diabetes	>30	to be computed	0.137	
+skorea	diabetes	>65		0.304	
+skorea	diabetes	male>30		0.157	
+skorea	diabetes	male30-39		0.031	
+skorea	diabetes	male40-49		0.121	
+skorea	diabetes	male50-59		0.188	
+skorea	diabetes	male60-69		0.331	
+skorea	diabetes	male>70		0.272	
+skorea	diabetes	female>30		0.119	
+skorea	diabetes	female30-39		0.021	
+skorea	diabetes	female40-49		0.057	
+skorea	diabetes	female50-59		0.111	
+skorea	diabetes	female60-69		0.241	
+skorea	diabetes	female>70		0.338	
+japan	diabetes	20-29		0.02	this is 2007 data
+japan	diabetes	30-39		0.04	
+japan	diabetes	40-49		0.07	
+japan	diabetes	50-59		0.13	
+japan	diabetes	60-69		0.22	
+japan	diabetes	>70		0.23	
+japan	hypertension	male20-35		0.15	this is 2010 data
+japan	hypertension	male35-50		0.3	
+japan	hypertension	male50-65		0.67	
+japan	hypertension	male>65		0.8	
+japan	hypertension	female20-35		0.02	
+japan	hypertension	female35-50		0.1	
+japan	hypertension	female50-65		0.53	
+japan	hypertension	female>65		0.8	
+spain	diabetes	male18-45		0.01	
+spain	diabetes	male46-60		0.015	
+spain	diabetes	male61-75		0.022	
+spain	diabetes	male>75		0.017	
+spain	diabetes	female18-45		0.004	
+spain	diabetes	female46-60		0.011	
+spain	diabetes	female61-75		0.018	
+spain	diabetes	female>75		0.025	
+spain	hypertension	male31-45		25.05	
+spain	hypertension	male46-60		43.42	
+spain	hypertension	male61-77		55.74	
+spain	hypertension	fema31-45		18.66	
+spain	hypertension	female46-60		53.06	
+spain	hypertension	female61-77		48.89	
+spain	hypertension	31-45		21.6	
+spain	hypertension	46-60		48.89	
+spain	hypertension	61-77		65.88	
+italy	diabetes				
+italy	diabetes				
