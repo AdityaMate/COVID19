@@ -1,4 +1,4 @@
-# COVID19
+# COVID19: Exploring lockdown policies for India
 Code and data for an agent based simulation to analyze the effect of various lockdown policies in India 
 
 ### Start:
