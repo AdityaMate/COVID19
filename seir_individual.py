@@ -15,7 +15,7 @@ from datetime import date
 def run_complete_simulation(seed, country, contact_matrix, p_mild_severe, p_severe_critical, p_critical_death, mean_time_to_isolate_factor, lockdown_factor_age, p_infect_household, fraction_stay_home, params, load_population=False):
     n = int(params['n'])
     n_ages = int(params['n_ages'])
-    np.random.seed(int(seed))
+    np.random.seed(seed)
     if load_population:
         print('loading')
         age, households, diabetes, hypertension, age_groups = pickle.load(open('{}_population_{}.pickle'.format(country, n), 'rb'))
@@ -130,7 +130,7 @@ def run_model(seed, households, age, age_groups, diabetes, hypertension, contact
     #points=params['event_points']
     lockdown_factor = params['lockdown_factor']
     mild_dist_factor=params['mild_dist_factor']
-    social_dist_factor=params['social_dist_factor']
+    #social_dist_factor=params['social_dist_factor']
     mean_time_to_isolate = params['mean_time_to_isolate']
     n = int(params['n'])
     n_ages = int(params['n_ages'])

@@ -1105,9 +1105,10 @@ def sample_households_germany(n):
 
 def sample_households_maharashtra(n):
     print("LOL3")
-    max_household_size = 10
+    max_household_size = 9
     son_lives_with_parents_till_age=30
-    
+    grandparent_age=60
+    #parent_uppercap=50
     households = np.zeros((n, max_household_size), dtype=np.int)
     households[:] = -1
     age = np.zeros(n, dtype=np.int)    
@@ -1118,6 +1119,175 @@ def sample_households_maharashtra(n):
                        0.99, 0.76, 1.78, 0.79, 1.05, 0.66, 0.73, 1.66, 0.70, 0.66, 0.71, 0.50, 1.74, 0.44, 0.70, 0.45,
                        0.45, 1.84, 0.44, 0.51, 0.41, 0.36, 1.12, 0.22, 0.37, 0.18, 0.20, 0.64, 0.12, 0.12 ,0.14, 0.07,
                        0.38, 0.06, 0.10, 0.05, 0.07, 0.15, 0.03, 0.03, 0.02, 0.03, 0.10, 0.00,0.01, 0.01, 0.01, 0.07,0.02, 0,0,0,0]    
+    '''
+    age_distribution = np.array(age_distribution)
+    age_distribution = age_distribution/age_distribution.sum()
+        
+    # List of household types: single household, couple without children, single parent +1/2/3 children, couple +1/2/3 children,
+    # family without a nucleus, nucleus with other persons, households with two or more nuclei (a and b)
+    #household_probs = np.array([0.308179, 0.191000, 0.0694283, 0.0273065, 0.00450268, 0.152655, 0.132429, 0.0340969, 
+    #                  0.043821, 0.033, 0.0150])
+    
+    household_probs= np.array([0.0394284038, 0.1135717199, 0.02265637467 ,0.04265637467, 0.006669284629,0.1135717199 ,0.2117641302 ,0.2117641302 ,
+                               0.009533560241, 0.123714170745, 0.104670131])
+    
+    household_probs /= household_probs.sum()
+    
+    num_generated = 0
+    
+    # from fertility data
+    mother_birth_age_distribution=get_mother_birth_age_distribution("India")    
+    renormalized_mother = mother_birth_age_distribution/mother_birth_age_distribution.sum()
+    renormalized_adult = age_distribution[18:]
+    renormalized_adult = renormalized_adult/renormalized_adult.sum()
+    # 18 considered as majority age, maybe should consider that children may still live with parents until 30 or so
+    renormalized_child = age_distribution[:son_lives_with_parents_till_age]
+    renormalized_child = renormalized_child/renormalized_child.sum()
+    
+    renormalized_adult_older = age_distribution[son_lives_with_parents_till_age:]
+    renormalized_adult_older /= renormalized_adult_older.sum()
+    # grandparent_age considered as retirement threshold, maybe should be larger, but reasonable for first pass
+    renormalized_grandparent = age_distribution[grandparent_age:]
+    renormalized_grandparent = renormalized_grandparent/renormalized_grandparent.sum()
+    
+    while num_generated < n:
+        if n - num_generated < (max_household_size+1):
+            i = 0
+        else:
+            i = np.random.choice(household_probs.shape[0], p=household_probs)
+        #single person household
+        #sample from age distribution
+        if i == 0:
+            age[num_generated] = np.random.choice(n_ages-son_lives_with_parents_till_age, p=renormalized_adult_older) + son_lives_with_parents_till_age
+            generated_this_step = 1
+        # couple, sample from age distribution conditioned on age >= 18
+        elif i == 1:  
+            age_adult = np.random.choice(n_ages-son_lives_with_parents_till_age, p=renormalized_adult_older) + son_lives_with_parents_till_age
+            age[num_generated] = age_adult
+            age[num_generated+1] = min(n_ages-1,age_adult+3) # man three years older on average
+            generated_this_step = 2
+        # single parent, 1 child
+        elif i == 2:            
+            child_age = np.random.choice(son_lives_with_parents_till_age, p=renormalized_child)
+            age[num_generated] = child_age
+            #super rough approximation
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + child_age)
+            age[num_generated + 1] = mother_current_age
+            generated_this_step = 2
+        # single parent, 2 children
+        elif i == 3:
+            for j in range(2):                
+                child_age = np.random.choice(son_lives_with_parents_till_age, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            generated_this_step = 3
+        # single parent, 3 children
+        elif i == 4:
+            for j in range(3):                
+                child_age = np.random.choice(son_lives_with_parents_till_age, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+3)]))
+            age[num_generated + 3] = mother_current_age
+            generated_this_step = 4
+            
+        # couple, 1 child
+        elif i == 5: 
+            child_age = np.random.choice(son_lives_with_parents_till_age, p=renormalized_child)
+            age[num_generated] = child_age
+            #super rough approximation
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + child_age)
+            age[num_generated + 1] = mother_current_age
+            age[num_generated + 2] = min(n_ages-1,mother_current_age+3)
+            generated_this_step = 3
+        
+        # couple, 2 children
+        elif i == 6:
+            for j in range(2):                
+                child_age = np.random.choice(son_lives_with_parents_till_age, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            age[num_generated + 3] = min(n_ages-1,mother_current_age+3)
+            generated_this_step = 4            
+        
+        # couple, 3 children
+        elif i == 7:
+            for j in range(3):                
+                child_age = np.random.choice(son_lives_with_parents_till_age, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+3)]))
+            age[num_generated + 3] = mother_current_age
+            age[num_generated + 4] = min(n_ages-1,mother_current_age+3)
+            generated_this_step = 5
+        
+        # family without nucleus
+        elif i == 8:
+            age[num_generated] = np.random.choice(n_ages-son_lives_with_parents_till_age, p=renormalized_adult_older) + son_lives_with_parents_till_age
+            age[num_generated+1] = np.random.choice(n_ages-son_lives_with_parents_till_age, p=renormalized_adult_older) + son_lives_with_parents_till_age
+            generated_this_step = 2         
+                
+        # nucleus with other persons (couple, 2 children, adult >= 60)
+        elif i == 9:
+            for j in range(2):                
+                child_age = np.random.choice(son_lives_with_parents_till_age, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            age[num_generated + 3] = min(n_ages-1,mother_current_age+3)
+            age[num_generated + 4] = np.random.choice(n_ages-18, p=renormalized_adult) + 18
+            generated_this_step = 5
+            
+        # households with 2 or more nuclei
+        # a - couple with same age for mother/father sampled from > 18 + 2 children <= 18 + 2 grand-parents
+        # b - couple with same age for mother/father sampled from > 18 + 2 children <= 18 + 2 children from other marriage <= 18
+        # scenario b removed for now 
+        
+        elif i == 10:
+            for j in range(4):                
+                child_age = np.random.choice(son_lives_with_parents_till_age, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+4)]))
+            age[num_generated + 4] = mother_current_age
+            age[num_generated + 5] = min(n_ages-1,mother_current_age+3)
+            #grandparent_age =  np.random.choice(n_ages-60, p=renormalized_grandparent) + 60
+            grandmother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            grandmother_current_age = min(n_ages-1,grandmother_age_at_birth + mother_current_age)
+            #age[num_generated + 4] = grandparent_age
+            #age[num_generated + 5] = grandparent_age+3   
+            age[num_generated + 5] = grandmother_current_age
+            age[num_generated + 6] = min(n_ages-1,grandmother_current_age+3)   
+            generated_this_step = 8
+            
+        #elif i == 11:
+            #for j in range(4):                
+                #child_age = np.random.choice(30, p=renormalized_child)
+                #age[num_generated+j] = child_age
+            #mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            #mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+4)]))
+            #age[num_generated + 4] = mother_current_age
+            #age[num_generated + 5] = min(n_ages-1,mother_current_age+3)          
+            #generated_this_step = 6
+            
+        #update list of household contacts
+        for i in range(num_generated, num_generated+generated_this_step):
+            curr_pos = 0
+            for j in range(num_generated, num_generated+generated_this_step):
+                if i != j:
+                    households[i, curr_pos] = j
+                    curr_pos += 1
+        num_generated += generated_this_step
+        
+    return households, age
+    '''
     age_distribution = np.array(age_distribution)
     age_distribution = age_distribution/age_distribution.sum()
         
@@ -1128,6 +1298,375 @@ def sample_households_maharashtra(n):
     
     household_probs= np.array([0.0594284038, 0.1135717199, 0.02265637467 ,0.02265637467, 0.006669284629,0.1135717199 ,0.2117641302 ,0.2117641302 ,
                                0.009533560241, 0.003714170745, 0.224670131])
+    
+    household_probs /= household_probs.sum()
+    
+    num_generated = 0
+    
+    # from fertility data
+    mother_birth_age_distribution=get_mother_birth_age_distribution("India")    
+    renormalized_mother = mother_birth_age_distribution/mother_birth_age_distribution.sum()
+    renormalized_adult = age_distribution[18:]
+    renormalized_adult = renormalized_adult/renormalized_adult.sum()
+    # 18 considered as majority age, maybe should consider that children may still live with parents until 30 or so
+    renormalized_child = age_distribution[:30]
+    renormalized_child = renormalized_child/renormalized_child.sum()
+    
+    renormalized_adult_older = age_distribution[30:]
+    renormalized_adult_older /= renormalized_adult_older.sum()
+    # 60 considered as retirement threshold, maybe should be larger, but reasonable for first pass
+    renormalized_grandparent = age_distribution[60:]
+    renormalized_grandparent = renormalized_grandparent/renormalized_grandparent.sum()
+    
+    while num_generated < n:
+        if n - num_generated < (max_household_size+1):
+            i = 0
+        else:
+            i = np.random.choice(household_probs.shape[0], p=household_probs)
+        #single person household
+        #sample from age distribution
+        if i == 0:
+            age[num_generated] = np.random.choice(n_ages-30, p=renormalized_adult_older) + 30
+            generated_this_step = 1
+        # couple, sample from age distribution conditioned on age >= 18
+        elif i == 1:  
+            age_adult = np.random.choice(n_ages-30, p=renormalized_adult_older) + 30
+            age[num_generated] = age_adult
+            age[num_generated+1] = min(n_ages-1,age_adult+3) # man three years older on average
+            generated_this_step = 2
+        # single parent, 1 child
+        elif i == 2:            
+            child_age = np.random.choice(30, p=renormalized_child)
+            age[num_generated] = child_age
+            #super rough approximation
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + child_age)
+            age[num_generated + 1] = mother_current_age
+            generated_this_step = 2
+        # single parent, 2 children
+        elif i == 3:
+            for j in range(2):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            generated_this_step = 3
+        # single parent, 3 children
+        elif i == 4:
+            for j in range(3):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+3)]))
+            age[num_generated + 3] = mother_current_age
+            generated_this_step = 4
+            
+        # couple, 1 child
+        elif i == 5: 
+            child_age = np.random.choice(30, p=renormalized_child)
+            age[num_generated] = child_age
+            #super rough approximation
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + child_age)
+            age[num_generated + 1] = mother_current_age
+            age[num_generated + 2] = min(n_ages-1,mother_current_age+3)
+            generated_this_step = 3
+        
+        # couple, 2 children
+        elif i == 6:
+            for j in range(2):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            age[num_generated + 3] = min(n_ages-1,mother_current_age+3)
+            generated_this_step = 4            
+        
+        # couple, 3 children
+        elif i == 7:
+            for j in range(3):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+3)]))
+            age[num_generated + 3] = mother_current_age
+            age[num_generated + 4] = min(n_ages-1,mother_current_age+3)
+            generated_this_step = 5
+        
+        # family without nucleus
+        elif i == 8:
+            age[num_generated] = np.random.choice(n_ages-30, p=renormalized_adult_older) + 30
+            age[num_generated+1] = np.random.choice(n_ages-30, p=renormalized_adult_older) + 30
+            generated_this_step = 2         
+                
+        # nucleus with other persons (couple, 2 children, adult >= 60)
+        elif i == 9:
+            for j in range(2):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            age[num_generated + 3] = min(n_ages-1,mother_current_age+3)
+            age[num_generated + 4] = np.random.choice(n_ages-60, p=renormalized_grandparent) + 60
+            generated_this_step = 5
+            
+        # households with 2 or more nuclei
+        # a - couple with same age for mother/father sampled from > 18 + 2 children <= 18 + 2 grand-parents
+        # b - couple with same age for mother/father sampled from > 18 + 2 children <= 18 + 2 children from other marriage <= 18
+        # scenario b removed for now 
+        
+        elif i == 10:
+            for j in range(2):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            age[num_generated + 3] = min(n_ages-1,mother_current_age+3)
+            #grandparent_age =  np.random.choice(n_ages-60, p=renormalized_grandparent) + 60
+            grandmother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            grandmother_current_age = min(n_ages-1,grandmother_age_at_birth + mother_current_age)
+            #age[num_generated + 4] = grandparent_age
+            #age[num_generated + 5] = grandparent_age+3   
+            age[num_generated + 4] = grandmother_current_age
+            age[num_generated + 5] = min(n_ages-1,grandmother_current_age+3)   
+            generated_this_step = 6
+            
+        #elif i == 11:
+            #for j in range(4):                
+                #child_age = np.random.choice(30, p=renormalized_child)
+                #age[num_generated+j] = child_age
+            #mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            #mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+4)]))
+            #age[num_generated + 4] = mother_current_age
+            #age[num_generated + 5] = min(n_ages-1,mother_current_age+3)          
+            #generated_this_step = 6
+            
+        #update list of household contacts
+        for i in range(num_generated, num_generated+generated_this_step):
+            curr_pos = 0
+            for j in range(num_generated, num_generated+generated_this_step):
+                if i != j:
+                    households[i, curr_pos] = j
+                    curr_pos += 1
+        num_generated += generated_this_step
+        
+    return households, age
+
+
+
+def sample_households_up(n):
+    print("LOL3_up")
+    max_household_size = 10
+    son_lives_with_parents_till_age=30
+    
+    households = np.zeros((n, max_household_size), dtype=np.int)
+    households[:] = -1
+    age = np.zeros(n, dtype=np.int)    
+    n_ages = 101
+    age_distribution= [2.1,2.03,2.03,2.14,2.08,2.12,2.31,2.22,2.47,2.01,2.76,2.02,2.69,2.49,2.2,2.45,2.41,2.15,
+                       2.75,1.72,2.46,1.55,2.19,1.61,1.55,2.23,1.56,1.23,1.8,0.81,2.25,0.67,1.56,0.8,0.79,2.26,
+                       0.98,0.73,1.25,0.58,1.96,0.54,1.16,0.64,0.57,1.87,0.72,0.61,0.96,0.48,1.08,0.61,1.02,0.56,
+                       0.54,1.62,0.65,0.42,0.7,0.28,1.73,0.29,0.65,0.27,0.23,1.52,0.2,0.19,0.31,0.11,1.1,0.09,0.25,
+                       0.09,0.08,0.58,0.09,0.04,0.09,0.03,0.42,0.03,0.07,0.02,0.02,0.19,0.02,0.02,0.02,0.01,0.1,0,
+                       0.01,0,0,0.03,0.01,0.01,0.01,0.01,0.01]
+    age_distribution = np.array(age_distribution)
+    age_distribution = age_distribution/age_distribution.sum()
+        
+    # List of household types: single household, couple without children, single parent +1/2/3 children, couple +1/2/3 children,
+    # family without a nucleus, nucleus with other persons, households with two or more nuclei (a and b)
+    #household_probs = np.array([0.308179, 0.191000, 0.0694283, 0.0273065, 0.00450268, 0.152655, 0.132429, 0.0340969, 
+    #                  0.043821, 0.033, 0.0150])
+    
+    household_probs= np.array([0.0594284038, 0.1135717199, 0.02265637467 ,0.02265637467, 0.006669284629,0.1135717199 ,0.2117641302 ,0.2117641302 ,
+                               0.009533560241, 0.003714170745, 0.224670131])
+    
+    household_probs /= household_probs.sum()
+    
+    num_generated = 0
+    
+    # from fertility data
+    mother_birth_age_distribution=get_mother_birth_age_distribution("India")    
+    renormalized_mother = mother_birth_age_distribution/mother_birth_age_distribution.sum()
+    renormalized_adult = age_distribution[18:]
+    renormalized_adult = renormalized_adult/renormalized_adult.sum()
+    # 18 considered as majority age, maybe should consider that children may still live with parents until 30 or so
+    renormalized_child = age_distribution[:30]
+    renormalized_child = renormalized_child/renormalized_child.sum()
+    
+    renormalized_adult_older = age_distribution[30:]
+    renormalized_adult_older /= renormalized_adult_older.sum()
+    # 60 considered as retirement threshold, maybe should be larger, but reasonable for first pass
+    renormalized_grandparent = age_distribution[60:]
+    renormalized_grandparent = renormalized_grandparent/renormalized_grandparent.sum()
+    
+    while num_generated < n:
+        if n - num_generated < (max_household_size+1):
+            i = 0
+        else:
+            i = np.random.choice(household_probs.shape[0], p=household_probs)
+        #single person household
+        #sample from age distribution
+        if i == 0:
+            age[num_generated] = np.random.choice(n_ages-30, p=renormalized_adult_older) + 30
+            generated_this_step = 1
+        # couple, sample from age distribution conditioned on age >= 18
+        elif i == 1:  
+            age_adult = np.random.choice(n_ages-30, p=renormalized_adult_older) + 30
+            age[num_generated] = age_adult
+            age[num_generated+1] = min(n_ages-1,age_adult+3) # man three years older on average
+            generated_this_step = 2
+        # single parent, 1 child
+        elif i == 2:            
+            child_age = np.random.choice(30, p=renormalized_child)
+            age[num_generated] = child_age
+            #super rough approximation
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + child_age)
+            age[num_generated + 1] = mother_current_age
+            generated_this_step = 2
+        # single parent, 2 children
+        elif i == 3:
+            for j in range(2):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            generated_this_step = 3
+        # single parent, 3 children
+        elif i == 4:
+            for j in range(3):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+3)]))
+            age[num_generated + 3] = mother_current_age
+            generated_this_step = 4
+            
+        # couple, 1 child
+        elif i == 5: 
+            child_age = np.random.choice(30, p=renormalized_child)
+            age[num_generated] = child_age
+            #super rough approximation
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + child_age)
+            age[num_generated + 1] = mother_current_age
+            age[num_generated + 2] = min(n_ages-1,mother_current_age+3)
+            generated_this_step = 3
+        
+        # couple, 2 children
+        elif i == 6:
+            for j in range(2):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            age[num_generated + 3] = min(n_ages-1,mother_current_age+3)
+            generated_this_step = 4            
+        
+        # couple, 3 children
+        elif i == 7:
+            for j in range(3):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+3)]))
+            age[num_generated + 3] = mother_current_age
+            age[num_generated + 4] = min(n_ages-1,mother_current_age+3)
+            generated_this_step = 5
+        
+        # family without nucleus
+        elif i == 8:
+            age[num_generated] = np.random.choice(n_ages-30, p=renormalized_adult_older) + 30
+            age[num_generated+1] = np.random.choice(n_ages-30, p=renormalized_adult_older) + 30
+            generated_this_step = 2         
+                
+        # nucleus with other persons (couple, 2 children, adult >= 60)
+        elif i == 9:
+            for j in range(2):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            age[num_generated + 3] = min(n_ages-1,mother_current_age+3)
+            age[num_generated + 4] = np.random.choice(n_ages-60, p=renormalized_grandparent) + 60
+            generated_this_step = 5
+            
+        # households with 2 or more nuclei
+        # a - couple with same age for mother/father sampled from > 18 + 2 children <= 18 + 2 grand-parents
+        # b - couple with same age for mother/father sampled from > 18 + 2 children <= 18 + 2 children from other marriage <= 18
+        # scenario b removed for now 
+        
+        elif i == 10:
+            for j in range(2):                
+                child_age = np.random.choice(30, p=renormalized_child)
+                age[num_generated+j] = child_age
+            mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+2)]))
+            age[num_generated + 2] = mother_current_age
+            age[num_generated + 3] = min(n_ages-1,mother_current_age+3)
+            #grandparent_age =  np.random.choice(n_ages-60, p=renormalized_grandparent) + 60
+            grandmother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            grandmother_current_age = min(n_ages-1,grandmother_age_at_birth + mother_current_age)
+            #age[num_generated + 4] = grandparent_age
+            #age[num_generated + 5] = grandparent_age+3   
+            age[num_generated + 4] = grandmother_current_age
+            age[num_generated + 5] = min(n_ages-1,grandmother_current_age+3)   
+            generated_this_step = 6
+            
+        #elif i == 11:
+            #for j in range(4):                
+                #child_age = np.random.choice(30, p=renormalized_child)
+                #age[num_generated+j] = child_age
+            #mother_age_at_birth = (np.random.choice(7, p=renormalized_mother) + 3)*5+np.random.randint(5)
+            #mother_current_age = min(n_ages-1,mother_age_at_birth + max(age[num_generated:(num_generated+4)]))
+            #age[num_generated + 4] = mother_current_age
+            #age[num_generated + 5] = min(n_ages-1,mother_current_age+3)          
+            #generated_this_step = 6
+            
+        #update list of household contacts
+        for i in range(num_generated, num_generated+generated_this_step):
+            curr_pos = 0
+            for j in range(num_generated, num_generated+generated_this_step):
+                if i != j:
+                    households[i, curr_pos] = j
+                    curr_pos += 1
+        num_generated += generated_this_step
+        
+    return households, age
+
+
+
+def sample_households_tamilnadu(n):
+    print("LOL3_TN")
+    max_household_size = 10
+    son_lives_with_parents_till_age=30
+    
+    households = np.zeros((n, max_household_size), dtype=np.int)
+    households[:] = -1
+    age = np.zeros(n, dtype=np.int)    
+    n_ages = 101
+    age_distribution= [1.38, 1.56, 1.57, 1.73, 1.57, 1.39, 1.53,1.6, 1.57,1.42, 1.57, 1.39, 1.61, 1.72, 1.54, 1.78, 1.46, 1.65, 1.67, 1.53, 1.68, 1.52, 1.67,
+                       1.74, 1.79, 2.1, 1.59, 1.8, 1.93, 1.64, 2.4, 1.21, 1.87, 1.22, 1.45, 2.24, 1.28, 1.43, 1.73, 1.23, 2.48, 0.87, 1.46, 1.02, 1, 2.61,
+                       1.03, 1.24, 1.47, 1.1, 1.63, 0.8, 1.45, 0.81, 0.85, 1.96, 0.83, 0.73, 0.96, 0.51, 1.93, 0.36, 0.73, 0.46, 0.42, 1.54, 0.26, 0.44,
+                       0.34, 0.27, 1.11, 0.11, 0.21, 0.16, 0.17, 0.61 ,0.12, 0.1, 0.1, 0.07, 0.37,0.04, 0.06, 0.03, 0.05, 0.15, 0.03, 0.03, 0.02, 0.01,
+                       0.07, 0.01, 0, 0.01, 0.01, 0.01, 0.01, 0.01, 0, 0, 0]
+    age_distribution = np.array(age_distribution)
+    age_distribution = age_distribution/age_distribution.sum()
+        
+    # List of household types: single household, couple without children, single parent +1/2/3 children, couple +1/2/3 children,
+    # family without a nucleus, nucleus with other persons, households with two or more nuclei (a and b)
+    #household_probs = np.array([0.308179, 0.191000, 0.0694283, 0.0273065, 0.00450268, 0.152655, 0.132429, 0.0340969, 
+    #                  0.043821, 0.033, 0.0150])
+    
+    household_probs= np.array([0.07617053468, 0.1511730752, 0.02978991577, 0.02978991577, 0.006107749591, 0.1511730752, 0.2149120129, 0.2149120129, 
+                               0.002045279256, 0.005866734915, 0.1180596939])
     
     household_probs /= household_probs.sum()
     

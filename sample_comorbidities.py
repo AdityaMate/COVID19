@@ -525,9 +525,9 @@ def p_comorbidity(country, comorbidity, warning=False):
                 else:
                     prevalence[i] = 0.4825
 
-    ######################################  India #############################
-    if country=='India':    
-        print("LOL11")
+    ######################################  Maharashtra #############################
+    if country=='Maharashtra':    
+        print("LOL13")
         if comorbidity=='diabetes':
             
             prevalence=np.array([i*1.63/15 for i in range(15)]+[1.63,1.93,2.00,2.49,2.50,1.21,1.82,2.57,
@@ -547,6 +547,7 @@ def p_comorbidity(country, comorbidity, warning=False):
                 prevalence[i]=0.5*(prevalence[i]-prevalence[54]) + prevalence[54]
             prevalence=np.array(prevalence)
             prevalence=prevalence/100
+            
         elif comorbidity=='hypertension':
             
             prevalence=[i*1.23/15 for i in range(15)]+[1.2300e+00,  1.6300e+00,  2.0500e+00,  2.5100e+00,
@@ -566,7 +567,119 @@ def p_comorbidity(country, comorbidity, warning=False):
                         1.4101e+02,  1.4405e+02 , 1.4713e+02,  1.5024e+02]
             for i in range(55,101):
                 prevalence[i]=0.2*(prevalence[i]-prevalence[54]) + prevalence[54]
-                prevalence=prevalence/100
+            prevalence=np.array(prevalence)
+        
+            prevalence=prevalence/100
+            
+    ######################################  Uttar Pradesh ################################
+    if country=='up':
+
+        warning_string= " 1. Prevalence assumed to be linerly increasing between ages 0-18 and 54+"
+
+        if comorbidity=='diabetes':
+                for i in range(101):
+                    if i<15:
+                        prevalence[i]= 0.025*(i/15.)
+                    elif i<19:
+                        prevalence[i]=0.025
+                    elif i<24:
+                        prevalence[i]=0.0288
+                    elif i<29:
+                        prevalence[i]=0.0412
+                    elif i<34:
+                        prevalence[i]=0.0595
+                    elif i<39:
+                        prevalence[i]=0.0781
+                    elif i<44:
+                        prevalence[i]=0.111
+                    elif i<49:
+                        prevalence[i]=0.139
+                    elif i<54:
+                        prevalence[i]=0.206
+                    else:
+                        prevalence[i]=0.206+0.5*((i-54)/46)
+                prevalence=np.array(prevalence)
+                #prevalence=prevalence/100
+                
+
+        elif comorbidity=='hypertension':
+                for i in range(101):
+                    if i<15:
+                        prevalence[i]= 0.0353*(i/15.)
+                    elif i<19:
+                        prevalence[i]=0.0353
+                    elif i<24:
+                        prevalence[i]=0.0493
+                    elif i<29:
+                        prevalence[i]=0.080
+                    elif i<34:
+                        prevalence[i]=0.121
+                    elif i<39:
+                        prevalence[i]=0.156
+                    elif i<44:
+                        prevalence[i]=0.202
+                    elif i<49:
+                        prevalence[i]=0.240
+                    elif i<54:
+                        prevalence[i]=0.248
+                    else:
+                        prevalence[i]=0.248+0.5*((i-54)/46)
+                prevalence=np.array(prevalence)
+                #prevalence=prevalence/100
+    
+    ######################################  tamilnadu #############################
+    if country=='tamilnadu':
+
+        if comorbidity=='diabetes':
+                for i in range(101):
+                    if i<15:
+                        prevalence[i]= 0.0202*(i/15.)
+                    elif i<19:
+                        prevalence[i]=0.0202
+                    elif i<24:
+                        prevalence[i]=0.0361
+                    elif i<29:
+                        prevalence[i]=0.0490
+                    elif i<34:
+                        prevalence[i]=0.0838
+                    elif i<39:
+                        prevalence[i]=0.1228
+                    elif i<44:
+                        prevalence[i]=0.1832
+                    elif i<49:
+                        prevalence[i]=0.2168
+                    elif i<54:
+                        prevalence[i]=0.3208
+                    else:
+                        prevalence[i]=0.3208+0.5*((i-54)/46)
+                prevalence=np.array(prevalence)
+                #prevalence=prevalence/100
+  
+        elif comorbidity=='hypertension':
+                for i in range(101):
+                    if i<15:
+                        prevalence[i]= 0.0301*(i/15.)
+                    elif i<19:
+                        prevalence[i]=0.0301
+                    elif i<24:
+                        prevalence[i]=0.0575
+                    elif i<29:
+                        prevalence[i]=0.092
+                    elif i<34:
+                        prevalence[i]=0.1272
+                    elif i<39:
+                        prevalence[i]=0.17
+                    elif i<44:
+                        prevalence[i]=0.221
+                    elif i<49:
+                        prevalence[i]=0.2894
+                    elif i<54:
+                        prevalence[i]=0.3759
+                    else:
+                        prevalence[i]=0.3759+0.5*((i-54)/46)
+                prevalence=np.array(prevalence)
+                #prevalence=prevalence/100
+  
     if warning:
         print ("Warning: \n", warning_string)
 
