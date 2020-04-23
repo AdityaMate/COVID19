@@ -24,8 +24,8 @@ Once the necessary population sample files are generated as above, you are all s
 
 ### Running policy simulations:
 
-- Around line 131, change the policy option from the list provided on line 130 to select some whichever other policy you may want to simulate. The default setting is 'LLLL', meaning a lockdown choice is made at all the four decision points. 
-- To run this on a large scale on a cluster, please follow comments around line 131 to uncomment suitable line to activate: (1) policy choice (2) seed settings
+- Around line 131 in run_simulation.py, change the policy option from the list provided on line 130 to select some whichever other policy you may want to simulate. The default setting is 'LLLL', meaning a lockdown choice is made at all the four decision points. 
+- To run this on a large scale on a cluster, please follow comments around line 131 to uncomment suitable lines to activate: (1) policy choice (2) seed settings
 - The output results will be stored in ./policy_results/+save_subfolder
 
 ### Running param sweeps: 
