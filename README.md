@@ -20,7 +20,7 @@ Alternatively, you can generate a population sample of your own using 'Populatio
 Once the necessary population sample files are generated as above, you are all set to run the simulation! 
 
 - Run: python3 run_simulation.py 
-- Note that this is programmed to run two independent trials of the simulation just now. You can edit this setting and run as many independent runs according as you may like. 
+- Note that this is programmed to run two independent trials of the simulation just now. You can edit this setting and run as many independent runs as you may like. 
 
 ### Running policy simulations:
 
